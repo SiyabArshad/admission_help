@@ -1,5 +1,6 @@
 import express from 'express';
 import auth from "./routes/auth"
+import universities from "./routes/universities"
 import {config} from "dotenv"
 import { connection } from './helpers/connection';
 import cookieParser from 'cookie-parser';
@@ -7,6 +8,8 @@ import passport from 'passport';
 import expresssession from "express-session"
 import { passportgoogle } from './helpers/Passport';
 import { Messagepass } from './helpers/Messagepass';
+import cron from "node-cron"
+
 const app = express();
 app.use(express.json())
 
@@ -26,6 +29,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(cookieParser());  
 app.use("/admissionhelp",auth)
+app.use("/admissionhelp",universities)
 app.get("/", (req, res) => {
     res.send("Hello, World!");
   });

@@ -17,11 +17,11 @@ const encrypt = (plainText:string) => {
   };
   type Transporter=nodemailer.Transporter
   const transporter:Transporter= nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
     auth: {
-    user: process.env.GMAIL as string,
-    pass: process.env.PASS as string
-  }
+      user: "Shaheerkhan4525@gmail.com",
+      pass: "wtbbypqhgmnezdkg",
+    },
 });
 
 interface bodyformat{
@@ -75,7 +75,7 @@ export async function Loginfunc(req: Request, res: Response){
         }
     
         // Create and sign JWT
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+        const token = jwt.sign({ userId: user._id,admin:user.admin }, process.env.JWT_SECRET, { expiresIn: '30d' });
         const userWithoutPassword = { ...user.toObject(), password: undefined };
         const mn=new Messagepass({user:userWithoutPassword,token},200)
         res.cookie('admissionhelp', token, { httpOnly: true, maxAge: 2592000000 });
@@ -110,6 +110,7 @@ export async function Forgotfunc(req: Request, res: Response){
         const mn=new Messagepass('Reset password email sent.',200)
         return res.json(mn);
       } catch (error) {
+        console.log(error)
         const mn=new Messagepass('Error sending reset password email. Please try again later.',500)
         return res.json(mn);
       }
@@ -149,7 +150,7 @@ export async function Newpassfunc(req: Request, res: Response){
 }
 
 export async function Loginwithgoogle(req: Request, res: Response){
-        const token = jwt.sign({ userId: req.user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+        const token = jwt.sign({ userId: req.user._id,admin:req.user.admin}, process.env.JWT_SECRET, { expiresIn: '30d' });
         const userWithoutPassword = { ...req.user.toObject(), password: undefined };
         const mn=new Messagepass({user:userWithoutPassword,token},200)
         res.cookie('admissionhelp', token, { httpOnly: true, maxAge: 2592000000 });
@@ -158,5 +159,23 @@ export async function Loginwithgoogle(req: Request, res: Response){
 
 export async function Loginwithgooglefailed(req: Request, res: Response){
     const mn=new Messagepass("Login Failed",400)
-    return res.status(200).json(mn);
+    return res.status(400).json(mn);
+}
+
+export const updatealerts=async(req:Request,res:Response)=>{
+  try{
+    const data = req.body;
+    const updatedData = await Users.findByIdAndUpdate(req.user.userId, data, { new: true });
+    if (updatedData) {
+      const mn=new Messagepass(updatedData,200)
+      return res.status(200).json(mn);
+    } else {
+      const mn=new Messagepass("Update Failed",404)
+      return res.status(404).json(mn);
+    }
+  }
+  catch{
+    const mn=new Messagepass("Try again later",500)
+    return res.status(500).json(mn);
+  }
 }

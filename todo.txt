@@ -1,0 +1,7 @@
+task of scraping
+1-get data and store it(done)
+2-send emeail to subscribe user
+task of getting data
+1-get all data(done)
+2-get search data(done)
+make an api for enable alert(done)
