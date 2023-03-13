@@ -1,5 +1,6 @@
 import{Request,Response} from "express"
 import { Messagepass } from "../helpers/Messagepass";
+import mongoose from "mongoose";
 import crypto from "crypto-js"
 import nodemailer from "nodemailer"
 import Users from "../models/Users";
@@ -78,7 +79,7 @@ export async function Loginfunc(req: Request, res: Response){
         const token = jwt.sign({ userId: user._id,admin:user.admin }, process.env.JWT_SECRET, { expiresIn: '30d' });
         const userWithoutPassword = { ...user.toObject(), password: undefined };
         const mn=new Messagepass({user:userWithoutPassword,token},200)
-        res.cookie('admissionhelp', token, { httpOnly: true, maxAge: 2592000000 });
+        res.cookie('admissionhelp', token, { httpOnly: true, secure:false,maxAge: 2592000000 });
         return res.status(200).json(mn);
       } catch (error) {
         const mn=new Messagepass('Error logging in. Please try again later.',500)
@@ -99,7 +100,7 @@ export async function Forgotfunc(req: Request, res: Response){
         // Create reset password token
         const resetPasswordToken:string = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
         // Send reset password email
-        const resetPasswordLink:string = `http://localhost:3000/Newpassword?token=${resetPasswordToken}`;
+        const resetPasswordLink:string = `${process.env.CLIENTRESET}=${resetPasswordToken}`;
         const emailOptions:nodemailer.SendMailOptions = {
           from: process.env.GMAIL,
           to: email,
@@ -153,15 +154,34 @@ export async function Loginwithgoogle(req: Request, res: Response){
         const token = jwt.sign({ userId: req.user._id,admin:req.user.admin}, process.env.JWT_SECRET, { expiresIn: '30d' });
         const userWithoutPassword = { ...req.user.toObject(), password: undefined };
         const mn=new Messagepass({user:userWithoutPassword,token},200)
-        res.cookie('admissionhelp', token, { httpOnly: true, maxAge: 2592000000 });
-        return res.status(200).json(mn);
+        res.cookie('admissionhelp', token, { httpOnly: true,secure:false, maxAge: 2592000000 });
+        res.redirect(process.env.GOOGLE_SUCCESS_URL);
 }
 
 export async function Loginwithgooglefailed(req: Request, res: Response){
-    const mn=new Messagepass("Login Failed",400)
-    return res.status(400).json(mn);
+  const mn=new Messagepass("Login Failed",400)
+  res.redirect(process.env.GOOGLE_FAILURE_URL);
+  res.status(400).json(mn);
 }
-
+export const getprofile=async(req:Request,res:Response)=>{
+  try{
+    const profile = await Users.aggregate([
+      { $match: { _id:new mongoose.Types.ObjectId(req.user.userId) } }, // Match the document id
+      { $project: { password: 0 } } // Exclude the password field
+    ])
+    if (profile) {
+      const mn=new Messagepass(profile,200)
+      return res.status(200).json(mn);
+    } else {
+      const mn=new Messagepass("Operation Failed",404)
+      return res.status(404).json(mn);
+    }
+  }
+  catch{
+    const mn=new Messagepass("Try again later",500)
+    return res.status(500).json(mn);
+  }
+}
 export const updatealerts=async(req:Request,res:Response)=>{
   try{
     const data = req.body;

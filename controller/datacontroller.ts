@@ -73,7 +73,6 @@ export const getsearchunisdata=async(req:Request,res:Response)=>{
         const { name}:any = req.query;
           const regx = new RegExp(name, 'i');
         const results = await Data.find({name:{ $regex:regx} }).exec();
-        console.log(results)
         const mn:Messagepass=new Messagepass(results,200)
         return res.status(200).json(mn);
     }

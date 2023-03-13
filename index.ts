@@ -8,8 +8,7 @@ import passport from 'passport';
 import expresssession from "express-session"
 import { passportgoogle } from './helpers/Passport';
 import { Messagepass } from './helpers/Messagepass';
-import cron from "node-cron"
-
+const cors = require('cors');
 const app = express();
 app.use(express.json())
 
@@ -28,6 +27,8 @@ app.use(expresssession({secret:process.env.JWT_SECRET,resave:false,saveUninitial
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(cookieParser());  
+app.use(cors({ origin: '*' }));
+
 app.use("/admissionhelp",auth)
 app.use("/admissionhelp",universities)
 app.get("/", (req, res) => {
